@@ -1,146 +1,72 @@
-# 📝 PLEASE READ [THE GUIDELINES](.github/GUIDELINES.md) BEFORE STARTING.
+# AudioCLIPImageEncoder
 
-# 🏗️ PLEASE CHECK OUT [STEP-BY-STEP](.github/STEP_BY_STEP.md)
+**AudioCLIPImageEncoder** is an encoder that encodes images using the [AudioCLIP](https://arxiv.org/abs/2106.13043) model.
 
-----
+Before using it, please check the [prerequisites](#prerequisites).
 
-# ✨ MyDummyExecutor
+This encoder is meant to be used in conjunction with the [AudioCLIPTextEncoder](https://hub.jina.ai/executor/jfe8kovq) and [AudioCLIPEncoder](https://hub.jina.ai/executor/f4d22e1r) encoders, as they embed text, images and audio to the same latent space.
 
-**MyDummyExecutor** is a class that ...
+You can either use the `Full` (where all three heads were trained) or the `Partial` (where the text and image heads were frozen) versions of the model.
 
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
+For more information, such as how to run an Executor on a GPU, check [this guide](https://docs.jina.ai/tutorials/gpu-executor/).
 
-- [🌱 Prerequisites](#-prerequisites)
-- [🚀 Usages](#-usages)
-- [🎉️ Example](#%EF%B8%8F-example)
-- [🔍️ Reference](#%EF%B8%8F-reference)
+## Prerequisites
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+> This should be met if 1) you are using `'jinahub+docker://'` syntax, or 2) leave `'download_model'` set to `False` (default value)
 
-## 🌱 Prerequisites
+First, you should download the model and the vocabulary, which will be saved into the `.cache` folder inside your
+current directory (will be created if it does not exist yet).
 
-Some conditions to fulfill before running the executor
+To do this, copy the `scripts/download_full.sh` script to your current directory and execute it:
 
-## 🚀 Usages
+```shell
+wget https://raw.githubusercontent.com/jina-ai/executors/main/jinahub/encoders/image/AudioCLIPImageEncoder/scripts/download_full.sh && chmod +x download_full.sh
+./download_full.sh
+```
 
-### 🚚 Via JinaHub
+This will download the `Full` version of the model (this is the default model used by the executor. 
+If you instead want to download the `Partial` version of the model, execute:
 
-#### using docker images
-Use the prebuilt images from JinaHub in your python codes, 
+```shell
+wget https://raw.githubusercontent.com/jina-ai/executors/main/jinahub/encoders/image/AudioCLIPImageEncoder/scripts/download_partial.sh && chmod +x download_partial.sh
+./download_partial.sh
+```
+
+And then you will also need to pass the argument `model_path='.cache/AudioCLIP-Full-Training.pt'` when you initialize the executor, like so:
 
 ```python
-from jina import Flow
-	
-f = Flow().add(uses='jinahub+docker://MyDummyExecutor')
+with Flow().add(
+        uses='jinahub://AudioCLIPTextEncoder',
+        uses_with={
+            'model_path': '.cache/AudioCLIP-Full-Training.pt'
+        }
+)
 ```
 
-or in the `.yml` config.
-	
-```yaml
-jtype: Flow
-pods:
-  - name: encoder
-    uses: 'jinahub+docker://MyDummyExecutor'
-```
+Replace 'Full' with 'Partial' if you downloaded that model.
 
-#### using source codes
-Use the source codes from JinaHub in your python codes,
+### Usage within Docker
+
+If you are using the Executor within Docker, you need to mount the local model directory and tell the Executor where to find it, like so:
 
 ```python
-from jina import Flow
-	
-f = Flow().add(uses='jinahub://MyDummyExecutor')
+with Flow().add(
+        uses='jinahub+docker://AudioCLIPTextEncoder',
+        uses_with={
+            'model_path': '/tmp/.cache/AudioCLIP-Full-Training.pt',
+        },
+        volumes='.cache:/tmp/.cache',
+)
 ```
 
-or in the `.yml` config.
+## See also
 
-```yaml
-jtype: Flow
-pods:
-  - name: encoder
-    uses: 'jinahub://MyDummyExecutor'
-```
+- [AudioCLIPTextEncoder](https://hub.jina.ai/executor/jfe8kovq)
+- [AudioCLIPEncoder](https://hub.jina.ai/executor/f4d22e1r)
 
+## References
 
-### 📦️ Via Pypi
+- [AudioCLIP paper](https://arxiv.org/abs/2106.13043)
+- [AudioCLIP GitHub Repository](https://github.com/AndreyGuzhov/AudioCLIP)
 
-1. Install the `jinahub-MY-DUMMY-EXECUTOR` package.
-
-	```bash
-	pip install git+https://github.com/jina-ai/EXECUTOR_REPO_NAME.git
-	```
-
-1. Use `jinahub-MY-DUMMY-EXECUTOR` in your code
-
-	```python
-	from jina import Flow
-	from jinahub.SUB_PACKAGE_NAME.MODULE_NAME import MyDummyExecutor
-	
-	f = Flow().add(uses=MyDummyExecutor)
-	```
-
-
-### 🐳 Via Docker
-
-1. Clone the repo and build the docker image
-
-	```shell
-	git clone https://github.com/jina-ai/EXECUTOR_REPO_NAME.git
-	cd EXECUTOR_REPO_NAME
-	docker build -t my-dummy-executor-image .
-	```
-
-1. Use `my-dummy-executor-image` in your codes
-
-	```python
-	from jina import Flow
-	
-	f = Flow().add(uses='docker://my-dummy-executor-image:latest')
-	```
-	
-
-## 🎉️ Example 
-
-Here we **MUST** show a **MINIMAL WORKING EXAMPLE**. We recommend to use `jinahub+docker://MyDummyExecutor` for the purpose of boosting the usage of Jina Hub. 
-
-It not necessary to demonstrate the usages of every inputs. It will be demonstrate in the next section.
-
-```python
-from jina import Flow, Document
-
-f = Flow().add(uses='jinahub+docker://MyDummyExecutor')
-
-with f:
-    resp = f.post(on='foo', inputs=Document(), return_results=True)
-    print(f'{resp}')
-```
-
-### `on=/index` (Optional)
-
-When there are multiple APIs, we need to list the inputs and outputs for each one. If there is only one universal API, we only demonstrate the inputs and outputs for it.
-
-#### Inputs 
-
-`Document` with `blob` of the shape `256`.
-
-#### Returns
-
-`Document` with `embedding` fields filled with an `ndarray` of the shape `embedding_dim` (=128, by default) with `dtype=nfloat32`.
-
-### `on=/update` (Optional)
-
-When there are multiple APIs, we need to list the inputs and outputs for each on
-
-#### Inputs 
-
-`Document` with `blob` of the shape `256`.
-
-#### Returns
-
-`Document` with `embedding` fields filled with an `ndarray` of the shape `embedding_dim` (=128, by default) with `dtype=nfloat32`.
-
-## 🔍️ Reference
-- Some reference
-
+<!-- version=v0.5 -->
