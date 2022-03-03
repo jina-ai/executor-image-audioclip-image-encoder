@@ -114,9 +114,9 @@ class AudioCLIPImageEncoder(Executor):
         if not docs:
             return
 
-        tpaths = parameters.get('traversal_paths', self.traversal_paths),
         batch_generator = DocumentArray(
-            filter(lambda doc: doc.tensor is not None, docs[tpaths])
+            filter(lambda doc: doc.tensor,
+            docs[parameters.get('traversal_paths', self.traversal_paths)])
         ).batch(
             batch_size=parameters.get('batch_size', self.batch_size),
         )

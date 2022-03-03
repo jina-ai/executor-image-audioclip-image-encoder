@@ -141,10 +141,13 @@ def test_traversal_path(
     basic_encoder.encode(docs, parameters={'traversal_paths': path})
     for path_check, count in expected_counts:
         embeddings = docs[path_check].embeddings
-        assert len([em for em in embeddings if em is not None]) == count
+        if count != 0:
+            assert len([em for em in embeddings if em is not None]) == count
+        else:
+            assert embeddings is None
 
 
-@pytest.mark.parametrize("batch_size", [1, 2, 4, 8])
+@pytest.mark.parametrize('batch_size', [1, 2, 4, 8])
 def test_batch_size(basic_encoder: AudioCLIPImageEncoder, batch_size: int):
     tensor = np.ones((224, 224, 3), dtype=np.uint8)
     docs = DocumentArray([Document(tensor=tensor) for _ in range(32)])
@@ -175,6 +178,6 @@ def test_embeddings_quality(basic_encoder: AudioCLIPImageEncoder):
     basic_encoder.encode(docs, {})
 
     docs.match(docs)
-    matches = ["cat", "dog", "helicopter", "airplane"]
+    matches = ['cat', 'dog', 'helicopter', 'airplane']
     for i, doc in enumerate(docs):
         assert doc.matches[1].id == matches[i]

@@ -26,9 +26,9 @@ def test_integration(request_size: int):
         )
 
     assert len(resp) == 50
-    for doc in resp:
-        assert doc.embedding is not None
-        assert doc.embedding.shape == (1024,)
+    for embedding in resp.embeddings:
+        assert embedding is not None
+        assert embedding.shape == (1024,)
 
 
 @pytest.mark.docker
