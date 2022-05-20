@@ -4,7 +4,8 @@ __license__ = "Apache-2.0"
 from typing import Optional
 
 import torch
-from jina import DocumentArray, Executor, requests
+from jina import Executor, requests
+from docarray import DocumentArray
 from PIL import Image
 from torchvision import transforms
 
@@ -114,9 +115,9 @@ class AudioCLIPImageEncoder(Executor):
         if not docs:
             return
 
+        tpaths = parameters.get('traversal_paths', self.traversal_paths)
         batch_generator = DocumentArray(
-            filter(lambda doc: doc.tensor,
-            docs[parameters.get('traversal_paths', self.traversal_paths)])
+            filter(lambda doc: doc.tensor is not None, docs[tpaths])
         ).batch(
             batch_size=parameters.get('batch_size', self.batch_size),
         )
