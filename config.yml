@@ -1,4 +1,4 @@
-jtype: MyDummyExecutor
+jtype: AudioCLIPImageEncoder
 metas:
   py_modules:
-    - MODULE_NAME.py
+    - executor/__init__.py
