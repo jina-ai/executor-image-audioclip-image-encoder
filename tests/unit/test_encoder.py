@@ -24,7 +24,7 @@ def basic_encoder_no_pre() -> AudioCLIPImageEncoder:
 def test_config():
     ex = Executor.load_config(str(Path(__file__).parents[2] / 'config.yml'))
     assert ex.batch_size == 32
-    assert ex.traversal_paths == '@r'
+    assert ex.access_paths == '@r'
     assert ex.use_preprocessing
 
 
@@ -138,7 +138,7 @@ def test_traversal_path(
         Document(id='chunk111', tensor=tensor),
         Document(id='chunk112', tensor=tensor),
     ]
-    basic_encoder.encode(docs, parameters={'traversal_paths': path})
+    basic_encoder.encode(docs, parameters={'access_paths': path})
     for path_check, count in expected_counts:
         embeddings = docs[path_check].embeddings
         if count != 0:
