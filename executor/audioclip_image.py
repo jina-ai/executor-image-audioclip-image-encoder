@@ -9,6 +9,8 @@ from docarray import DocumentArray
 from PIL import Image
 from torchvision import transforms
 
+import warnings
+
 from .audio_clip.model import AudioCLIP
 
 # Defaults from CLIP
@@ -26,7 +28,8 @@ class AudioCLIPImageEncoder(Executor):
         self,
         model_path: str = '.cache/AudioCLIP-Full-Training.pt',
         use_preprocessing: bool = True,
-        traversal_paths: str = '@r',
+        access_paths: str = '@r',
+        traversal_paths: Optional[str] = None,
         batch_size: int = 32,
         device: str = 'cpu',
         download_model: bool = False,
@@ -39,8 +42,9 @@ class AudioCLIPImageEncoder(Executor):
             images (tensors) before encoding them. If you disable this, you must ensure
             that the images you pass in have the correct format, see the ``encode`` method
             for details.
-        :param traversal_paths: default traversal path (used if not specified in
+        :param access_paths: default traversal path (used if not specified in
             request's parameters)
+        :param traversal_paths: please use access_paths
         :param batch_size: default batch size (used if not specified in
             request's parameters)
         :param device: device that the model is on (should be "cpu", "cuda" or "cuda:X",
@@ -50,7 +54,13 @@ class AudioCLIPImageEncoder(Executor):
         super().__init__(*args, **kwargs)
         torch.set_grad_enabled(False)
         self.model_path = model_path
-        self.traversal_paths = traversal_paths
+
+        if traversal_paths is not None:
+            self.access_paths = traversal_paths
+            warnings.warn("'traversal_paths' will be deprecated in the future, please use 'access_paths'.")
+        else:
+            self.access_paths = access_paths
+
         self.batch_size = batch_size
         self.device = device
         self.use_preprocessing = use_preprocessing
@@ -109,13 +119,13 @@ class AudioCLIPImageEncoder(Executor):
             the shape ``[C, H, W]`` (in the RGB color format). They should also be
             normalized (values between 0 and 1).
         :param parameters: A dictionary that contains parameters to control encoding.
-            The accepted keys are ``traversal_paths`` and ``batch_size`` - in their
+            The accepted keys are ``access_paths`` and ``batch_size`` - in their
             absence their corresponding default values are used.
         """
         if not docs:
             return
 
-        tpaths = parameters.get('traversal_paths', self.traversal_paths)
+        tpaths = parameters.get('access_paths', self.access_paths)
         batch_generator = DocumentArray(
             filter(lambda doc: doc.tensor is not None, docs[tpaths])
         ).batch(
